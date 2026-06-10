@@ -33,7 +33,7 @@
 
   body {
     font-family: 'Inter', sans-serif;
-    background: var(--white);
+    background: var(--lilac-300);
     color: var(--text-dark);
     min-height: 100vh;
     font-size: 14px;
@@ -67,8 +67,7 @@
     color: var(--text-light);
     font-size: 13px;
     margin-bottom: 32px;
-    font-style: italic;
-    font-family: 'Cormorant Garamond', serif;
+    font-family: 'Inter', sans-serif;
   }
   .form-group { margin-bottom: 16px; text-align: left; }
   .form-group label {
@@ -220,23 +219,24 @@
   }
   .view-tab {
     padding: 12px 20px;
-    font-size: 13px;
+    font-size: 15px;
     color: var(--text-light);
     cursor: pointer;
     border-bottom: 2.5px solid transparent;
     transition: all 0.2s;
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 15px;
+    font-family: 'Dancing Script', cursive;
     letter-spacing: 0.02em;
   }
   .view-tab.active {
-    color: var(--lilac-500);
-    border-bottom-color: var(--lilac-400);
+    color: var(--white);
+    background: var(--lilac-500);
+    border-bottom-color: var(--lilac-600);
     font-weight: 600;
+    border-radius: 8px 8px 0 0;
   }
 
   /* CONTEÚDO PRINCIPAL */
-  .app-content { flex: 1; padding: 20px; max-width: 900px; margin: 0 auto; width: 100%; }
+  .app-content { flex: 1; padding: 20px; max-width: 900px; margin: 0 auto; width: 100%; background: var(--lilac-300); border-radius: 0; }
 
   /* VIEWS */
   .view { display: none; }
@@ -257,24 +257,24 @@
     gap: 12px;
   }
   .dia-nav button {
-    background: none;
-    border: 1.5px solid var(--line);
+    background: var(--white);
+    border: 1.5px solid var(--lilac-300);
     border-radius: 8px;
     width: 32px;
     height: 32px;
     cursor: pointer;
-    color: var(--text-mid);
+    color: var(--lilac-500);
     font-size: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: border-color 0.2s;
   }
-  .dia-nav button:hover { border-color: var(--lilac-300); }
+  .dia-nav button:hover { border-color: var(--lilac-500); }
   .dia-data {
     font-family: 'Dancing Script', cursive;
     font-size: 1.5rem;
-    color: var(--text-dark);
+    color: var(--white);
   }
   .dia-grid {
     display: grid;
@@ -340,11 +340,10 @@
     color: var(--text-dark);
     background: transparent;
     padding: 6px 0;
-    font-family: 'Cormorant Garamond', serif;
-    font-style: italic;
-    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
   }
-  .prioridade-input::placeholder { color: var(--lilac-200); font-style: italic; }
+  .prioridade-input::placeholder { color: var(--lilac-200); }
 
   /* Tarefas jurídicas */
   .tarefa-item {
@@ -449,7 +448,7 @@
   .semana-titulo {
     font-family: 'Dancing Script', cursive;
     font-size: 1.5rem;
-    color: var(--text-dark);
+    color: var(--white);
   }
   .semana-grid {
     display: grid;
@@ -578,23 +577,23 @@
   .mes-titulo {
     font-family: 'Dancing Script', cursive;
     font-size: 1.8rem;
-    color: var(--text-dark);
+    color: var(--white);
   }
   .mensal-nav { display: flex; gap: 8px; align-items: center; }
   .mensal-nav button {
-    background: none;
-    border: 1.5px solid var(--line);
+    background: var(--white);
+    border: 1.5px solid var(--lilac-300);
     border-radius: 8px;
     width: 32px;
     height: 32px;
     cursor: pointer;
-    color: var(--text-mid);
+    color: var(--lilac-500);
     font-size: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
   }
-  .mensal-nav button:hover { border-color: var(--lilac-300); }
+  .mensal-nav button:hover { border-color: var(--lilac-500); }
   .calendario-grid {
     display: grid;
     grid-template-columns: repeat(7, 1fr);
@@ -606,7 +605,7 @@
     font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: var(--text-light);
+    color: var(--white);
     padding: 8px 4px;
     font-weight: 600;
   }
@@ -881,21 +880,6 @@
           <div class="card-title">⭐ Prioridade do dia</div>
           <input class="prioridade-input" id="dia-prioridade"
             placeholder="qual é o foco de hoje?" oninput="salvarDiaDebounce()">
-        </div>
-
-        <!-- Estudo -->
-        <div class="card">
-          <div class="card-title">📚 Estudo do dia</div>
-          <div class="field-row">
-            <div class="field-label">Matéria / tema</div>
-            <input class="field-input" id="dia-estudo-materia"
-              placeholder="ex: Direito Administrativo" oninput="salvarDiaDebounce()">
-          </div>
-          <div class="field-row">
-            <div class="field-label">Meta de hoje</div>
-            <input class="field-input" id="dia-estudo-meta"
-              placeholder="ex: ler 20 páginas" oninput="salvarDiaDebounce()">
-          </div>
         </div>
 
         <!-- Agenda -->
@@ -1201,8 +1185,6 @@ async function carregarDia() {
 
   if (diaData) {
     document.getElementById('dia-prioridade').value = diaData.prioridade || '';
-    document.getElementById('dia-estudo-materia').value = diaData.estudo_materia || '';
-    document.getElementById('dia-estudo-meta').value = diaData.estudo_meta || '';
     document.getElementById('dia-notas').value = diaData.notas || '';
 
     // Preencher agenda
@@ -1215,8 +1197,6 @@ async function carregarDia() {
     }
   } else {
     document.getElementById('dia-prioridade').value = '';
-    document.getElementById('dia-estudo-materia').value = '';
-    document.getElementById('dia-estudo-meta').value = '';
     document.getElementById('dia-notas').value = '';
   }
 
@@ -1295,8 +1275,6 @@ async function salvarDia() {
     user_id: userId,
     data: dataStr,
     prioridade: document.getElementById('dia-prioridade').value,
-    estudo_materia: document.getElementById('dia-estudo-materia').value,
-    estudo_meta: document.getElementById('dia-estudo-meta').value,
     notas: document.getElementById('dia-notas').value,
     agenda: JSON.stringify(agenda),
   };
