@@ -1,0 +1,14 @@
+{
+  "name": "Meu Planner",
+  "short_name": "Planner",
+  "start_url": "./planner.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#e8d5f5",
+  "icons": [
+    { "src": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Spiral%20notepad/3D/spiral_notepad_3d.png",
+      "sizes": "192x192", "type": "image/png" },
+    { "src": "https://raw.githubusercontent.com/microsoft/fluentui-emoji/main/assets/Spiral%20notepad/3D/spiral_notepad_3d.png",
+      "sizes": "512x512", "type": "image/png" }
+  ]
+}

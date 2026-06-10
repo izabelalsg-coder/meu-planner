@@ -1,0 +1,1708 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meu Planner</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#e8d5f5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Dancing+Script:wght@400;600&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --lilac-50:  #faf7ff;
+    --lilac-100: #f3ecfd;
+    --lilac-200: #e8d5f5;
+    --lilac-300: #d8b8ef;
+    --lilac-400: #c49ae6;
+    --lilac-500: #a97dd8;
+    --lilac-600: #8a5ec0;
+    --text-dark:  #3a2d4a;
+    --text-mid:   #6b5a7e;
+    --text-light: #9d8aad;
+    --white: #ffffff;
+    --line: #e4d4f0;
+    --radius: 16px;
+    --shadow: 0 2px 20px rgba(169,125,216,0.10);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--white);
+    color: var(--text-dark);
+    min-height: 100vh;
+    font-size: 14px;
+  }
+
+  /* ── LOGIN ── */
+  #login-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(145deg, var(--lilac-50) 0%, var(--lilac-100) 60%, var(--lilac-200) 100%);
+    padding: 24px;
+  }
+  .login-card {
+    background: var(--white);
+    border-radius: 24px;
+    padding: 48px 40px;
+    width: 100%;
+    max-width: 380px;
+    box-shadow: 0 8px 40px rgba(169,125,216,0.18);
+    text-align: center;
+  }
+  .login-card h1 {
+    font-family: 'Dancing Script', cursive;
+    font-size: 2.4rem;
+    color: var(--lilac-500);
+    margin-bottom: 6px;
+  }
+  .login-card p {
+    color: var(--text-light);
+    font-size: 13px;
+    margin-bottom: 32px;
+    font-style: italic;
+    font-family: 'Cormorant Garamond', serif;
+  }
+  .form-group { margin-bottom: 16px; text-align: left; }
+  .form-group label {
+    display: block;
+    font-size: 11px;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+  }
+  .form-group input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1.5px solid var(--line);
+    border-radius: 12px;
+    font-size: 14px;
+    color: var(--text-dark);
+    outline: none;
+    transition: border-color 0.2s;
+    background: var(--lilac-50);
+    font-family: 'Inter', sans-serif;
+  }
+  .form-group input:focus { border-color: var(--lilac-400); background: var(--white); }
+  .btn-primary {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--lilac-400), var(--lilac-500));
+    color: var(--white);
+    border: none;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    margin-top: 8px;
+    font-family: 'Inter', sans-serif;
+    letter-spacing: 0.03em;
+  }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-primary:active { transform: scale(0.98); }
+  .login-toggle {
+    margin-top: 20px;
+    font-size: 13px;
+    color: var(--text-light);
+  }
+  .login-toggle a {
+    color: var(--lilac-500);
+    cursor: pointer;
+    text-decoration: none;
+    font-weight: 500;
+  }
+  #login-error {
+    color: #c0392b;
+    font-size: 12px;
+    margin-top: 10px;
+    min-height: 16px;
+  }
+
+  /* ── APP ── */
+  #app { display: none; flex-direction: column; min-height: 100vh; }
+
+  /* HEADER */
+  .app-header {
+    background: var(--white);
+    border-bottom: 1px solid var(--line);
+    padding: 14px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .app-title {
+    font-family: 'Dancing Script', cursive;
+    font-size: 1.7rem;
+    color: var(--lilac-500);
+  }
+  .header-actions { display: flex; align-items: center; gap: 10px; }
+  .btn-logout {
+    background: none;
+    border: 1.5px solid var(--line);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: var(--text-light);
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+  }
+  .btn-logout:hover { border-color: var(--lilac-300); color: var(--lilac-500); }
+
+  /* ATALHOS */
+  .shortcuts {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .shortcut-link {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: var(--lilac-50);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    text-decoration: none;
+    color: var(--text-mid);
+    font-size: 12px;
+    font-weight: 500;
+    transition: background 0.2s, border-color 0.2s;
+    white-space: nowrap;
+  }
+  .shortcut-link:hover { background: var(--lilac-200); border-color: var(--lilac-300); }
+  .shortcut-link span { font-size: 14px; }
+
+  /* VERSÍCULO */
+  .versiculo-bar {
+    background: linear-gradient(135deg, var(--lilac-100), var(--lilac-50));
+    border-bottom: 1px solid var(--line);
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .versiculo-bar p {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 13px;
+    font-style: italic;
+    color: var(--text-mid);
+    line-height: 1.5;
+  }
+  .versiculo-bar strong {
+    font-style: normal;
+    color: var(--lilac-500);
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  .versiculo-icon { font-size: 16px; flex-shrink: 0; }
+
+  /* NAVEGAÇÃO DE VISUALIZAÇÕES */
+  .view-tabs {
+    display: flex;
+    background: var(--white);
+    border-bottom: 1px solid var(--line);
+    padding: 0 20px;
+  }
+  .view-tab {
+    padding: 12px 20px;
+    font-size: 13px;
+    color: var(--text-light);
+    cursor: pointer;
+    border-bottom: 2.5px solid transparent;
+    transition: all 0.2s;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 15px;
+    letter-spacing: 0.02em;
+  }
+  .view-tab.active {
+    color: var(--lilac-500);
+    border-bottom-color: var(--lilac-400);
+    font-weight: 600;
+  }
+
+  /* CONTEÚDO PRINCIPAL */
+  .app-content { flex: 1; padding: 20px; max-width: 900px; margin: 0 auto; width: 100%; }
+
+  /* VIEWS */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ────────────────────────────────────
+     VISTA DIÁRIA
+  ──────────────────────────────────── */
+  .dia-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .dia-nav {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .dia-nav button {
+    background: none;
+    border: 1.5px solid var(--line);
+    border-radius: 8px;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    color: var(--text-mid);
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.2s;
+  }
+  .dia-nav button:hover { border-color: var(--lilac-300); }
+  .dia-data {
+    font-family: 'Dancing Script', cursive;
+    font-size: 1.5rem;
+    color: var(--text-dark);
+  }
+  .dia-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 600px) {
+    .dia-grid { grid-template-columns: 1fr; }
+  }
+  .card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+  }
+  .card-title {
+    font-family: 'Dancing Script', cursive;
+    font-size: 1.1rem;
+    color: var(--lilac-500);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-full { grid-column: 1 / -1; }
+
+  /* Agenda de horários */
+  .agenda-slot {
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--lilac-50);
+    padding: 4px 0;
+    gap: 10px;
+  }
+  .agenda-slot:last-child { border-bottom: none; }
+  .agenda-hora {
+    font-size: 11px;
+    color: var(--text-light);
+    width: 40px;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .agenda-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 13px;
+    color: var(--text-dark);
+    background: transparent;
+    font-family: 'Inter', sans-serif;
+    padding: 3px 0;
+  }
+  .agenda-input::placeholder { color: var(--lilac-200); }
+
+  /* Campo de prioridade */
+  .prioridade-input {
+    width: 100%;
+    border: none;
+    border-bottom: 1.5px solid var(--line);
+    outline: none;
+    font-size: 14px;
+    color: var(--text-dark);
+    background: transparent;
+    padding: 6px 0;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 15px;
+  }
+  .prioridade-input::placeholder { color: var(--lilac-200); font-style: italic; }
+
+  /* Tarefas jurídicas */
+  .tarefa-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--lilac-50);
+  }
+  .tarefa-item:last-child { border-bottom: none; }
+  .tarefa-check {
+    width: 16px;
+    height: 16px;
+    border: 1.5px solid var(--lilac-300);
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .tarefa-check.done {
+    background: var(--lilac-400);
+    border-color: var(--lilac-400);
+  }
+  .tarefa-check.done::after { content: '✓'; color: white; font-size: 10px; }
+  .tarefa-texto {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 13px;
+    color: var(--text-dark);
+    background: transparent;
+    font-family: 'Inter', sans-serif;
+  }
+  .tarefa-texto.done { text-decoration: line-through; color: var(--text-light); }
+  .tarefa-texto::placeholder { color: var(--lilac-200); }
+  .btn-add-tarefa {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: 1px dashed var(--line);
+    border-radius: 8px;
+    padding: 6px 12px;
+    color: var(--text-light);
+    font-size: 12px;
+    cursor: pointer;
+    margin-top: 10px;
+    font-family: 'Inter', sans-serif;
+    transition: border-color 0.2s;
+  }
+  .btn-add-tarefa:hover { border-color: var(--lilac-300); color: var(--lilac-500); }
+
+  /* Campo de texto grande */
+  .textarea-field {
+    width: 100%;
+    border: none;
+    outline: none;
+    resize: none;
+    font-size: 13px;
+    color: var(--text-dark);
+    background: transparent;
+    font-family: 'Inter', sans-serif;
+    line-height: 1.7;
+    min-height: 80px;
+  }
+  .textarea-field::placeholder { color: var(--lilac-200); }
+  .field-row {
+    margin-bottom: 12px;
+  }
+  .field-label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-light);
+    margin-bottom: 4px;
+  }
+  .field-input {
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid var(--line);
+    outline: none;
+    font-size: 13px;
+    color: var(--text-dark);
+    background: transparent;
+    padding: 4px 0;
+    font-family: 'Inter', sans-serif;
+  }
+  .field-input::placeholder { color: var(--lilac-200); }
+
+  /* ────────────────────────────────────
+     VISTA SEMANAL
+  ──────────────────────────────────── */
+  .semana-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .semana-titulo {
+    font-family: 'Dancing Script', cursive;
+    font-size: 1.5rem;
+    color: var(--text-dark);
+  }
+  .semana-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  @media (max-width: 600px) {
+    .semana-grid { grid-template-columns: 1fr; }
+  }
+  .dias-semana { display: flex; flex-direction: column; gap: 10px; }
+  .dia-semana-card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px 16px;
+  }
+  .dia-semana-nome {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--lilac-400);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .dia-semana-input {
+    width: 100%;
+    border: none;
+    outline: none;
+    resize: none;
+    font-size: 13px;
+    color: var(--text-dark);
+    background: transparent;
+    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
+    min-height: 48px;
+  }
+  .dia-semana-input::placeholder { color: var(--lilac-200); }
+
+  /* Habit tracker */
+  .habit-tracker { overflow-x: auto; }
+  .habit-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .habit-table th {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-light);
+    padding: 6px 8px;
+    text-align: center;
+    border-bottom: 1px solid var(--line);
+  }
+  .habit-table th:first-child { text-align: left; }
+  .habit-table td {
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--lilac-50);
+    vertical-align: middle;
+  }
+  .habit-nome-input {
+    border: none;
+    outline: none;
+    font-size: 12px;
+    color: var(--text-dark);
+    background: transparent;
+    font-family: 'Inter', sans-serif;
+    width: 100%;
+  }
+  .habit-nome-input::placeholder { color: var(--lilac-200); }
+  .habit-check {
+    width: 18px;
+    height: 18px;
+    border: 1.5px solid var(--line);
+    border-radius: 4px;
+    cursor: pointer;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  .habit-check.checked {
+    background: var(--lilac-300);
+    border-color: var(--lilac-400);
+  }
+  .habit-check.checked::after { content: '✓'; color: white; font-size: 10px; }
+
+  /* Prioridades semanais */
+  .prioridade-list { list-style: none; }
+  .prioridade-list li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--lilac-50);
+  }
+  .prioridade-list li:last-child { border-bottom: none; }
+  .prioridade-num {
+    font-size: 10px;
+    color: var(--lilac-400);
+    font-weight: 600;
+    width: 16px;
+    flex-shrink: 0;
+  }
+  .prioridade-list input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 13px;
+    color: var(--text-dark);
+    background: transparent;
+    font-family: 'Inter', sans-serif;
+  }
+  .prioridade-list input::placeholder { color: var(--lilac-200); }
+
+  /* ────────────────────────────────────
+     VISTA MENSAL
+  ──────────────────────────────────── */
+  .mensal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .mes-titulo {
+    font-family: 'Dancing Script', cursive;
+    font-size: 1.8rem;
+    color: var(--text-dark);
+  }
+  .mensal-nav { display: flex; gap: 8px; align-items: center; }
+  .mensal-nav button {
+    background: none;
+    border: 1.5px solid var(--line);
+    border-radius: 8px;
+    width: 32px;
+    height: 32px;
+    cursor: pointer;
+    color: var(--text-mid);
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .mensal-nav button:hover { border-color: var(--lilac-300); }
+  .calendario-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-bottom: 20px;
+  }
+  .cal-header {
+    text-align: center;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-light);
+    padding: 8px 4px;
+    font-weight: 600;
+  }
+  .cal-day {
+    min-height: 70px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+    position: relative;
+  }
+  .cal-day:hover { background: var(--lilac-50); }
+  .cal-day.today { border-color: var(--lilac-400); background: var(--lilac-50); }
+  .cal-day.other-month { opacity: 0.35; }
+  .cal-day.selected { background: var(--lilac-100); border-color: var(--lilac-400); }
+  .cal-day-num {
+    font-size: 12px;
+    color: var(--text-mid);
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  .cal-day.today .cal-day-num {
+    background: var(--lilac-400);
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+  }
+  .cal-event {
+    font-size: 10px;
+    padding: 2px 5px;
+    border-radius: 4px;
+    margin-bottom: 2px;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+  }
+  .cal-event.compromisso { background: var(--lilac-400); }
+  .cal-event.prazo       { background: #e07b6a; }
+  .cal-event.estudo      { background: #7bc47b; }
+  .cal-event.pessoal     { background: #7bb0c4; }
+  .cal-event.familia     { background: #c4a77b; }
+
+  /* Painel inferior do mensal */
+  .mensal-bottom {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-top: 4px;
+  }
+  @media (max-width: 600px) {
+    .mensal-bottom { grid-template-columns: 1fr; }
+    .calendario-grid { gap: 2px; }
+    .cal-day { min-height: 50px; }
+  }
+
+  /* MODAL de evento */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(58,45,74,0.35);
+    z-index: 200;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--white);
+    border-radius: 24px 24px 0 0;
+    padding: 28px 24px 36px;
+    width: 100%;
+    max-width: 480px;
+    box-shadow: 0 -8px 40px rgba(169,125,216,0.18);
+  }
+  .modal-title {
+    font-family: 'Dancing Script', cursive;
+    font-size: 1.4rem;
+    color: var(--lilac-500);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 22px;
+    color: var(--text-light);
+    cursor: pointer;
+    line-height: 1;
+  }
+  .modal .form-group input,
+  .modal .form-group select,
+  .modal .form-group textarea {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    font-size: 13px;
+    color: var(--text-dark);
+    outline: none;
+    background: var(--lilac-50);
+    font-family: 'Inter', sans-serif;
+  }
+  .modal .form-group select { appearance: none; }
+  .modal .form-group textarea { resize: none; min-height: 70px; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .btn-secondary {
+    flex: 1;
+    padding: 12px;
+    background: none;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    font-size: 13px;
+    color: var(--text-mid);
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+  }
+  .btn-danger {
+    flex: 1;
+    padding: 12px;
+    background: none;
+    border: 1.5px solid #e07b6a;
+    border-radius: 10px;
+    font-size: 13px;
+    color: #e07b6a;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+  }
+  .modal-actions .btn-primary { flex: 2; }
+
+  /* SAVE INDICATOR */
+  .save-indicator {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--lilac-400);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 12px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    z-index: 300;
+  }
+  .save-indicator.show { opacity: 1; }
+
+  /* TIPO CORES */
+  .tipo-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+  }
+  .tipo-compromisso { background: var(--lilac-400); }
+  .tipo-prazo       { background: #e07b6a; }
+  .tipo-estudo      { background: #7bc47b; }
+  .tipo-pessoal     { background: #7bb0c4; }
+  .tipo-familia     { background: #c4a77b; }
+
+  /* LOADING */
+  .loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    color: var(--text-light);
+    font-size: 13px;
+    gap: 8px;
+  }
+  .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--line);
+    border-top-color: var(--lilac-400);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <h1>Meu Planner</h1>
+    <p>organize, planeje, floresça</p>
+    <div class="form-group">
+      <label>E-mail</label>
+      <input type="email" id="login-email" placeholder="seu@email.com" autocomplete="email">
+    </div>
+    <div class="form-group">
+      <label>Senha</label>
+      <input type="password" id="login-senha" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <div id="login-error"></div>
+    <button class="btn-primary" onclick="fazerLogin()">Entrar</button>
+    <div class="login-toggle">
+      Não tem conta? <a onclick="toggleCadastro()">Cadastre-se</a>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="header-top">
+      <div class="app-title">Meu Planner</div>
+      <div class="header-actions">
+        <button class="btn-logout" onclick="fazerLogout()">Sair</button>
+      </div>
+    </div>
+    <div class="shortcuts">
+      <a class="shortcut-link" href="http://izabelagoncalves.rf.gd" target="_blank">
+        <span>⚖️</span> Advocacia
+      </a>
+      <a class="shortcut-link" href="https://izabelalsg-coder.github.io/meu-diario" target="_blank">
+        <span>📔</span> Meu Diário
+      </a>
+      <a class="shortcut-link" href="https://izabelalsg-coder.github.io/nossa-familia/" target="_blank">
+        <span>🏡</span> Nossa Família
+      </a>
+      <a class="shortcut-link" href="https://to-do.microsoft.com/tasks/" target="_blank">
+        <span>✅</span> To Do
+      </a>
+    </div>
+  </header>
+
+  <!-- VERSÍCULO -->
+  <div class="versiculo-bar">
+    <span class="versiculo-icon">✦</span>
+    <p id="versiculo-texto"><em>Carregando versículo...</em></p>
+  </div>
+
+  <!-- TABS -->
+  <div class="view-tabs">
+    <div class="view-tab active" onclick="mudarView('diaria', this)">Meu Dia</div>
+    <div class="view-tab" onclick="mudarView('semanal', this)">Minha Semana</div>
+    <div class="view-tab" onclick="mudarView('mensal', this)">Mês</div>
+  </div>
+
+  <!-- CONTEÚDO -->
+  <div class="app-content">
+
+    <!-- VISTA DIÁRIA -->
+    <div class="view active" id="view-diaria">
+      <div class="dia-header">
+        <div class="dia-nav">
+          <button onclick="navegarDia(-1)">‹</button>
+          <div class="dia-data" id="dia-data-label"></div>
+          <button onclick="navegarDia(1)">›</button>
+        </div>
+        <button class="btn-add-tarefa" onclick="navegarDia(0)" style="border:none;color:var(--text-light);font-size:12px;">hoje</button>
+      </div>
+
+      <div class="dia-grid">
+        <!-- Prioridade -->
+        <div class="card">
+          <div class="card-title">⭐ Prioridade do dia</div>
+          <input class="prioridade-input" id="dia-prioridade"
+            placeholder="qual é o foco de hoje?" oninput="salvarDiaDebounce()">
+        </div>
+
+        <!-- Estudo -->
+        <div class="card">
+          <div class="card-title">📚 Estudo do dia</div>
+          <div class="field-row">
+            <div class="field-label">Matéria / tema</div>
+            <input class="field-input" id="dia-estudo-materia"
+              placeholder="ex: Direito Administrativo" oninput="salvarDiaDebounce()">
+          </div>
+          <div class="field-row">
+            <div class="field-label">Meta de hoje</div>
+            <input class="field-input" id="dia-estudo-meta"
+              placeholder="ex: ler 20 páginas" oninput="salvarDiaDebounce()">
+          </div>
+        </div>
+
+        <!-- Agenda -->
+        <div class="card">
+          <div class="card-title">🕐 Agenda</div>
+          <div id="agenda-slots"></div>
+        </div>
+
+        <!-- Tarefas jurídicas -->
+        <div class="card">
+          <div class="card-title">⚖️ Tarefas jurídicas</div>
+          <div id="tarefas-list"></div>
+          <button class="btn-add-tarefa" onclick="adicionarTarefa()">+ nova tarefa</button>
+        </div>
+
+        <!-- Notas -->
+        <div class="card card-full">
+          <div class="card-title">📝 Notas livres</div>
+          <textarea class="textarea-field" id="dia-notas"
+            placeholder="anotações do dia..." rows="4" oninput="salvarDiaDebounce()"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- VISTA SEMANAL -->
+    <div class="view" id="view-semanal">
+      <div class="semana-header">
+        <div class="semana-nav">
+          <div class="dia-nav">
+            <button onclick="navegarSemana(-1)">‹</button>
+            <div class="semana-titulo" id="semana-label"></div>
+            <button onclick="navegarSemana(1)">›</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="semana-grid">
+        <!-- Dias -->
+        <div class="dias-semana" id="dias-semana-list"></div>
+
+        <!-- Lateral direita -->
+        <div>
+          <!-- Prioridades -->
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-title">🎯 Top prioridades</div>
+            <ul class="prioridade-list" id="semana-prioridades"></ul>
+          </div>
+
+          <!-- Tarefas semanais -->
+          <div class="card" style="margin-bottom:16px;">
+            <div class="card-title">✓ Tarefas da semana</div>
+            <div id="semana-tarefas-list"></div>
+            <button class="btn-add-tarefa" onclick="adicionarTarefaSemana()">+ nova tarefa</button>
+          </div>
+
+          <!-- Habit tracker -->
+          <div class="card">
+            <div class="card-title">🌱 Hábitos</div>
+            <div class="habit-tracker">
+              <table class="habit-table">
+                <thead>
+                  <tr>
+                    <th>Hábito</th>
+                    <th>S</th><th>T</th><th>Q</th><th>Q</th><th>S</th><th>S</th><th>D</th>
+                  </tr>
+                </thead>
+                <tbody id="habit-tbody"></tbody>
+              </table>
+            </div>
+            <button class="btn-add-tarefa" onclick="adicionarHabito()" style="margin-top:10px;">+ novo hábito</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VISTA MENSAL -->
+    <div class="view" id="view-mensal">
+      <div class="mensal-header">
+        <div class="mensal-nav">
+          <button onclick="navegarMes(-1)">‹</button>
+          <div class="mes-titulo" id="mes-label"></div>
+          <button onclick="navegarMes(1)">›</button>
+        </div>
+      </div>
+
+      <div class="calendario-grid" id="calendario"></div>
+
+      <div class="mensal-bottom">
+        <div class="card">
+          <div class="card-title">📋 To do</div>
+          <div id="mensal-todo-list"></div>
+          <button class="btn-add-tarefa" onclick="adicionarTarefaMensal()">+ tarefa</button>
+        </div>
+        <div class="card">
+          <div class="card-title">⭐ Prioridades</div>
+          <ul class="prioridade-list" id="mensal-prioridades"></ul>
+        </div>
+        <div class="card">
+          <div class="card-title">📌 Importante</div>
+          <textarea class="textarea-field" id="mensal-importante"
+            placeholder="datas e eventos importantes..." rows="5"
+            oninput="salvarMensalDebounce()"></textarea>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /app-content -->
+</div><!-- /app -->
+
+<!-- MODAL EVENTO -->
+<div class="modal-overlay" id="modal-evento">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="modal-titulo-label">Novo evento</span>
+      <button class="modal-close" onclick="fecharModal()">×</button>
+    </div>
+    <div class="form-group">
+      <label>Título</label>
+      <input type="text" id="evento-titulo" placeholder="nome do evento">
+    </div>
+    <div class="form-group">
+      <label>Data</label>
+      <input type="date" id="evento-data">
+    </div>
+    <div class="form-group">
+      <label>Tipo</label>
+      <select id="evento-tipo">
+        <option value="compromisso">Compromisso</option>
+        <option value="prazo">Prazo Processual</option>
+        <option value="estudo">Estudo</option>
+        <option value="pessoal">Pessoal</option>
+        <option value="familia">Família</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Notas</label>
+      <textarea id="evento-notas" placeholder="detalhes..." rows="2"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="fecharModal()">Cancelar</button>
+      <button class="btn-danger" id="btn-excluir-evento" onclick="excluirEvento()" style="display:none">Excluir</button>
+      <button class="btn-primary" onclick="salvarEvento()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- SAVE INDICATOR -->
+<div class="save-indicator" id="save-indicator">Salvo ✓</div>
+
+<script>
+const SUPABASE_URL  = 'https://pnjfdwhskwawrkzpoece.supabase.co';
+const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBuamZkd2hza3dhd3JrenBvZWNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwOTU5NTcsImV4cCI6MjA5NjY3MTk1N30.6SupV0e2fW3NcrgtyBIpC6dzlBI-T5yyPymLSt4w98M';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let userId = null;
+let viewAtual = 'diaria';
+let diaAtual = new Date();
+let mesAtual = new Date();
+let semanaAtual = new Date();
+let eventoEditandoId = null;
+let salvarDiaTimer = null;
+let salvarSemanaTimer = null;
+let salvarMensalTimer = null;
+
+// ── UTILS ──
+const fmt = (d) => d.toISOString().split('T')[0];
+const diaStr = (d) => {
+  return d.toLocaleDateString('pt-BR', { weekday:'long', day:'numeric', month:'long' });
+};
+const nomesMes = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+                  'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const nomesDia = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
+function showSaved() {
+  const el = document.getElementById('save-indicator');
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 1500);
+}
+
+// ── AUTH ──
+async function fazerLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const senha = document.getElementById('login-senha').value;
+  const errEl = document.getElementById('login-error');
+  errEl.textContent = '';
+  const { data, error } = await sb.auth.signInWithPassword({ email, password: senha });
+  if (error) { errEl.textContent = 'E-mail ou senha inválidos.'; return; }
+  iniciarApp(data.user);
+}
+
+async function toggleCadastro() {
+  const email = document.getElementById('login-email').value.trim();
+  const senha = document.getElementById('login-senha').value;
+  const errEl = document.getElementById('login-error');
+  errEl.textContent = '';
+  if (!email || senha.length < 6) {
+    errEl.textContent = 'Preencha e-mail e senha (mín. 6 caracteres).';
+    return;
+  }
+  const { data, error } = await sb.auth.signUp({ email, password: senha });
+  if (error) { errEl.textContent = error.message; return; }
+  errEl.style.color = 'var(--lilac-500)';
+  errEl.textContent = 'Conta criada! Verifique seu e-mail para confirmar.';
+}
+
+async function fazerLogout() {
+  await sb.auth.signOut();
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  userId = null;
+}
+
+function iniciarApp(user) {
+  userId = user.id;
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  document.getElementById('app').style.flexDirection = 'column';
+  carregarVersiculo();
+  mudarView('diaria', document.querySelector('.view-tab'));
+}
+
+// Verificar sessão existente
+sb.auth.getSession().then(({ data: { session } }) => {
+  if (session) iniciarApp(session.user);
+});
+
+// ── VERSÍCULO ──
+async function carregarVersiculo() {
+  try {
+    const res = await fetch('https://bible-api.com/john+3:16?translation=almeida');
+    const d = await res.json();
+    if (d && d.text) {
+      document.getElementById('versiculo-texto').innerHTML =
+        `${d.text.trim()} <strong>${d.reference}</strong>`;
+      return;
+    }
+  } catch(e) {}
+  // fallback
+  const versiculos = [
+    { texto: 'O Senhor é o meu pastor e nada me faltará.', ref: 'Salmos 23:1' },
+    { texto: 'Tudo posso naquele que me fortalece.', ref: 'Filipenses 4:13' },
+    { texto: 'Porque sou eu que conheço os planos que tenho para vocês, diz o Senhor.', ref: 'Jeremias 29:11' },
+    { texto: 'Entrega o teu caminho ao Senhor; confia nele, e ele agirá.', ref: 'Salmos 37:5' },
+    { texto: 'Busca primeiro o reino de Deus e a sua justiça, e as demais coisas serão acrescentadas.', ref: 'Mateus 6:33' },
+    { texto: 'Não te deixes vencer pelo mal, mas vence o mal com o bem.', ref: 'Romanos 12:21' },
+    { texto: 'A fé é a certeza daquilo que esperamos e a prova das coisas que não vemos.', ref: 'Hebreus 11:1' },
+  ];
+  const idx = new Date().getDay();
+  const v = versiculos[idx];
+  document.getElementById('versiculo-texto').innerHTML =
+    `${v.texto} <strong>${v.ref}</strong>`;
+}
+
+// ── NAVEGAÇÃO ──
+function mudarView(view, el) {
+  viewAtual = view;
+  document.querySelectorAll('.view-tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  else document.querySelectorAll('.view-tab').forEach((t, i) => {
+    if (['diaria','semanal','mensal'][i] === view) t.classList.add('active');
+  });
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById('view-' + view).classList.add('active');
+  if (view === 'diaria') carregarDia();
+  if (view === 'semanal') carregarSemana();
+  if (view === 'mensal') carregarMes();
+}
+
+// ── VISTA DIÁRIA ──
+function navegarDia(delta) {
+  if (delta === 0) diaAtual = new Date();
+  else {
+    diaAtual = new Date(diaAtual);
+    diaAtual.setDate(diaAtual.getDate() + delta);
+  }
+  carregarDia();
+}
+
+async function carregarDia() {
+  const dataStr = fmt(diaAtual);
+  document.getElementById('dia-data-label').textContent = diaStr(diaAtual);
+
+  // Slots de agenda
+  const slots = [];
+  for (let h = 5; h <= 20; h++) {
+    slots.push(h + ':00');
+    slots.push(h + ':30');
+  }
+  const slotsEl = document.getElementById('agenda-slots');
+  slotsEl.innerHTML = '';
+  slots.forEach(hora => {
+    const div = document.createElement('div');
+    div.className = 'agenda-slot';
+    div.innerHTML = `<span class="agenda-hora">${hora}</span>
+      <input class="agenda-input" placeholder="" data-hora="${hora}"
+        oninput="salvarDiaDebounce()">`;
+    slotsEl.appendChild(div);
+  });
+
+  // Carregar dados do dia
+  const { data: diaData } = await sb.from('planner_dia')
+    .select('*').eq('user_id', userId).eq('data', dataStr).maybeSingle();
+
+  if (diaData) {
+    document.getElementById('dia-prioridade').value = diaData.prioridade || '';
+    document.getElementById('dia-estudo-materia').value = diaData.estudo_materia || '';
+    document.getElementById('dia-estudo-meta').value = diaData.estudo_meta || '';
+    document.getElementById('dia-notas').value = diaData.notas || '';
+
+    // Preencher agenda
+    if (diaData.agenda) {
+      const agenda = typeof diaData.agenda === 'string'
+        ? JSON.parse(diaData.agenda) : diaData.agenda;
+      slotsEl.querySelectorAll('.agenda-input').forEach(input => {
+        if (agenda[input.dataset.hora]) input.value = agenda[input.dataset.hora];
+      });
+    }
+  } else {
+    document.getElementById('dia-prioridade').value = '';
+    document.getElementById('dia-estudo-materia').value = '';
+    document.getElementById('dia-estudo-meta').value = '';
+    document.getElementById('dia-notas').value = '';
+  }
+
+  await carregarTarefasDia(dataStr);
+}
+
+async function carregarTarefasDia(dataStr) {
+  const { data: tarefas } = await sb.from('planner_tarefas')
+    .select('*').eq('user_id', userId).eq('data', dataStr)
+    .order('created_at');
+
+  const list = document.getElementById('tarefas-list');
+  list.innerHTML = '';
+  (tarefas || []).forEach(t => renderTarefaDia(t));
+}
+
+function renderTarefaDia(t) {
+  const list = document.getElementById('tarefas-list');
+  const div = document.createElement('div');
+  div.className = 'tarefa-item';
+  div.dataset.id = t.id;
+  div.innerHTML = `
+    <div class="tarefa-check ${t.concluida ? 'done' : ''}" onclick="toggleTarefa(this, '${t.id}')"></div>
+    <input class="tarefa-texto ${t.concluida ? 'done' : ''}" value="${t.texto || ''}"
+      placeholder="tarefa..."
+      oninput="atualizarTextTarefa('${t.id}', this.value)"
+      onkeydown="if(event.key==='Enter'){document.querySelector('[onclick=\\'adicionarTarefa()\\']').click()}">
+    <button onclick="removerTarefa('${t.id}', this.closest('.tarefa-item'))"
+      style="background:none;border:none;color:var(--text-light);cursor:pointer;font-size:14px;padding:2px 4px;">×</button>`;
+  list.appendChild(div);
+}
+
+async function adicionarTarefa() {
+  const dataStr = fmt(diaAtual);
+  const { data } = await sb.from('planner_tarefas')
+    .insert({ user_id: userId, data: dataStr, texto: '' }).select().single();
+  if (data) renderTarefaDia(data);
+}
+
+async function toggleTarefa(el, id) {
+  const done = !el.classList.contains('done');
+  el.classList.toggle('done');
+  const input = el.nextElementSibling;
+  input.classList.toggle('done');
+  await sb.from('planner_tarefas').update({ concluida: done }).eq('id', id);
+  showSaved();
+}
+
+let tarefaTimer = {};
+function atualizarTextTarefa(id, texto) {
+  clearTimeout(tarefaTimer[id]);
+  tarefaTimer[id] = setTimeout(async () => {
+    await sb.from('planner_tarefas').update({ texto }).eq('id', id);
+    showSaved();
+  }, 800);
+}
+
+async function removerTarefa(id, el) {
+  await sb.from('planner_tarefas').delete().eq('id', id);
+  el.remove();
+  showSaved();
+}
+
+function salvarDiaDebounce() {
+  clearTimeout(salvarDiaTimer);
+  salvarDiaTimer = setTimeout(salvarDia, 1000);
+}
+
+async function salvarDia() {
+  const dataStr = fmt(diaAtual);
+  const agenda = {};
+  document.querySelectorAll('.agenda-input').forEach(input => {
+    if (input.value) agenda[input.dataset.hora] = input.value;
+  });
+  const payload = {
+    user_id: userId,
+    data: dataStr,
+    prioridade: document.getElementById('dia-prioridade').value,
+    estudo_materia: document.getElementById('dia-estudo-materia').value,
+    estudo_meta: document.getElementById('dia-estudo-meta').value,
+    notas: document.getElementById('dia-notas').value,
+    agenda: JSON.stringify(agenda),
+  };
+  await sb.from('planner_dia').upsert(payload, { onConflict: 'user_id,data' });
+  showSaved();
+}
+
+// ── VISTA SEMANAL ──
+function getSegunda(d) {
+  const dt = new Date(d);
+  const day = dt.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  dt.setDate(dt.getDate() + diff);
+  return dt;
+}
+
+function navegarSemana(delta) {
+  semanaAtual = new Date(semanaAtual);
+  semanaAtual.setDate(semanaAtual.getDate() + delta * 7);
+  carregarSemana();
+}
+
+async function carregarSemana() {
+  const seg = getSegunda(semanaAtual);
+  const dom = new Date(seg); dom.setDate(dom.getDate() + 6);
+  const semanaStr = fmt(seg);
+
+  document.getElementById('semana-label').textContent =
+    `${seg.getDate()}/${seg.getMonth()+1} – ${dom.getDate()}/${dom.getMonth()+1}`;
+
+  // Dias da semana
+  const diasNomes = ['Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado','Domingo'];
+  const diasList = document.getElementById('dias-semana-list');
+  diasList.innerHTML = '';
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(seg); d.setDate(d.getDate() + i);
+    const div = document.createElement('div');
+    div.className = 'dia-semana-card';
+    div.innerHTML = `<div class="dia-semana-nome">${diasNomes[i]} ${d.getDate()}/${d.getMonth()+1}</div>
+      <textarea class="dia-semana-input" data-dia="${fmt(d)}"
+        placeholder="compromissos e notas..."
+        oninput="salvarSemanaDebounce()"></textarea>`;
+    diasList.appendChild(div);
+  }
+
+  // Carregar dados semanais
+  const { data: semData } = await sb.from('planner_semana')
+    .select('*').eq('user_id', userId).eq('semana_inicio', semanaStr).maybeSingle();
+
+  // Prioridades
+  const prioEl = document.getElementById('semana-prioridades');
+  prioEl.innerHTML = '';
+  const prios = semData?.prioridades || [];
+  for (let i = 0; i < 5; i++) {
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="prioridade-num">${i+1}</span>
+      <input value="${prios[i] || ''}" placeholder="prioridade ${i+1}..."
+        oninput="salvarSemanaDebounce()">`;
+    prioEl.appendChild(li);
+  }
+
+  // Tarefas semanais
+  const tarefasEl = document.getElementById('semana-tarefas-list');
+  tarefasEl.innerHTML = '';
+  const tarefas = semData?.tarefas || [];
+  tarefas.forEach((t, idx) => renderTarefaSemana(t, idx));
+  if (!tarefas.length) for (let i = 0; i < 3; i++) renderTarefaSemana({ texto: '', concluida: false }, i);
+
+  // Notas
+  if (semData?.notas) {
+    // Distribuir notas por dia se houver
+    const diasInputs = diasList.querySelectorAll('.dia-semana-input');
+    if (semData.dias) {
+      const dias = typeof semData.dias === 'string' ? JSON.parse(semData.dias) : semData.dias;
+      diasInputs.forEach(inp => { if (dias[inp.dataset.dia]) inp.value = dias[inp.dataset.dia]; });
+    }
+  }
+
+  // Hábitos
+  await carregarHabitos(seg);
+}
+
+function renderTarefaSemana(t, idx) {
+  const list = document.getElementById('semana-tarefas-list');
+  const div = document.createElement('div');
+  div.className = 'tarefa-item';
+  div.dataset.idx = idx;
+  div.innerHTML = `
+    <div class="tarefa-check ${t.concluida ? 'done' : ''}" onclick="toggleTarefaSemana(this)"></div>
+    <input class="tarefa-texto ${t.concluida ? 'done' : ''}" value="${t.texto || ''}"
+      placeholder="tarefa..."
+      oninput="salvarSemanaDebounce()">
+    <button onclick="this.closest('.tarefa-item').remove(); salvarSemanaDebounce()"
+      style="background:none;border:none;color:var(--text-light);cursor:pointer;font-size:14px;padding:2px 4px;">×</button>`;
+  list.appendChild(div);
+}
+
+function toggleTarefaSemana(el) {
+  el.classList.toggle('done');
+  el.nextElementSibling.classList.toggle('done');
+  salvarSemanaDebounce();
+}
+
+function adicionarTarefaSemana() {
+  const list = document.getElementById('semana-tarefas-list');
+  renderTarefaSemana({ texto: '', concluida: false }, list.children.length);
+}
+
+function salvarSemanaDebounce() {
+  clearTimeout(salvarSemanaTimer);
+  salvarSemanaTimer = setTimeout(salvarSemana, 1000);
+}
+
+async function salvarSemana() {
+  const seg = getSegunda(semanaAtual);
+  const semanaStr = fmt(seg);
+
+  const prios = Array.from(document.querySelectorAll('#semana-prioridades input')).map(i => i.value);
+  const tarefas = Array.from(document.querySelectorAll('#semana-tarefas-list .tarefa-item')).map(item => ({
+    texto: item.querySelector('input').value,
+    concluida: item.querySelector('.tarefa-check').classList.contains('done'),
+  }));
+  const dias = {};
+  document.querySelectorAll('.dia-semana-input').forEach(inp => {
+    if (inp.value) dias[inp.dataset.dia] = inp.value;
+  });
+
+  await sb.from('planner_semana').upsert({
+    user_id: userId,
+    semana_inicio: semanaStr,
+    prioridades: prios,
+    tarefas,
+    dias: JSON.stringify(dias),
+  }, { onConflict: 'user_id,semana_inicio' });
+  showSaved();
+}
+
+async function carregarHabitos(seg) {
+  const { data: habitos } = await sb.from('planner_habitos')
+    .select('*').eq('user_id', userId).eq('ativo', true).order('created_at');
+
+  const diasSemana = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(seg); d.setDate(d.getDate() + i);
+    diasSemana.push(fmt(d));
+  }
+
+  // Registros da semana
+  const { data: registros } = await sb.from('planner_habitos_registro')
+    .select('*').eq('user_id', userId)
+    .in('data', diasSemana);
+
+  const tbody = document.getElementById('habit-tbody');
+  tbody.innerHTML = '';
+
+  (habitos || []).forEach(h => {
+    const tr = document.createElement('tr');
+    let cells = `<td><input class="habit-nome-input" value="${h.nome}" data-id="${h.id}"
+      oninput="atualizarNomeHabito('${h.id}', this.value)"></td>`;
+    diasSemana.forEach(data => {
+      const reg = (registros || []).find(r => r.habito_id === h.id && r.data === data);
+      const checked = reg?.concluido ? 'checked' : '';
+      cells += `<td><div class="habit-check ${checked}" onclick="toggleHabito(this, '${h.id}', '${data}')"></div></td>`;
+    });
+    tr.innerHTML = cells;
+    tbody.appendChild(tr);
+  });
+
+  // Linha vazia se não há hábitos
+  if (!habitos?.length) {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td colspan="8" style="text-align:center;color:var(--text-light);padding:16px;font-size:12px;">
+      Adicione hábitos para rastrear</td>`;
+    tbody.appendChild(tr);
+  }
+}
+
+async function adicionarHabito() {
+  const { data } = await sb.from('planner_habitos')
+    .insert({ user_id: userId, nome: '' }).select().single();
+  if (data) carregarHabitos(getSegunda(semanaAtual));
+}
+
+let habitoTimer = {};
+function atualizarNomeHabito(id, nome) {
+  clearTimeout(habitoTimer[id]);
+  habitoTimer[id] = setTimeout(async () => {
+    await sb.from('planner_habitos').update({ nome }).eq('id', id);
+    showSaved();
+  }, 800);
+}
+
+async function toggleHabito(el, habitoId, data) {
+  const checked = !el.classList.contains('checked');
+  el.classList.toggle('checked');
+  await sb.from('planner_habitos_registro').upsert({
+    user_id: userId, habito_id: habitoId, data, concluido: checked,
+  }, { onConflict: 'habito_id,data' });
+  showSaved();
+}
+
+// ── VISTA MENSAL ──
+function navegarMes(delta) {
+  mesAtual = new Date(mesAtual.getFullYear(), mesAtual.getMonth() + delta, 1);
+  carregarMes();
+}
+
+async function carregarMes() {
+  const ano = mesAtual.getFullYear();
+  const mes = mesAtual.getMonth();
+  document.getElementById('mes-label').textContent = `${nomesMes[mes]} ${ano}`;
+
+  const cal = document.getElementById('calendario');
+  cal.innerHTML = '';
+
+  // Cabeçalho
+  ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom'].forEach(d => {
+    const div = document.createElement('div');
+    div.className = 'cal-header';
+    div.textContent = d;
+    cal.appendChild(div);
+  });
+
+  const primeiroDia = new Date(ano, mes, 1);
+  const ultimoDia = new Date(ano, mes + 1, 0);
+  const hoje = fmt(new Date());
+
+  // Buscar eventos do mês
+  const inicio = fmt(primeiroDia);
+  const fim = fmt(ultimoDia);
+  const { data: eventos } = await sb.from('planner_eventos')
+    .select('*').eq('user_id', userId)
+    .gte('data', inicio).lte('data', fim);
+
+  // Offset: segunda = 0
+  let offset = primeiroDia.getDay() - 1;
+  if (offset < 0) offset = 6;
+
+  // Dias do mês anterior
+  for (let i = 0; i < offset; i++) {
+    const d = new Date(ano, mes, 1 - offset + i);
+    renderCalDia(cal, d, eventos, true, hoje);
+  }
+
+  // Dias do mês
+  for (let d = 1; d <= ultimoDia.getDate(); d++) {
+    const dt = new Date(ano, mes, d);
+    renderCalDia(cal, dt, eventos, false, hoje);
+  }
+
+  // Completar grid
+  const total = offset + ultimoDia.getDate();
+  const resto = total % 7 === 0 ? 0 : 7 - (total % 7);
+  for (let i = 1; i <= resto; i++) {
+    const d = new Date(ano, mes + 1, i);
+    renderCalDia(cal, d, eventos, true, hoje);
+  }
+
+  // Carregar painel inferior
+  await carregarPainelMensal(ano, mes);
+}
+
+function renderCalDia(cal, dt, eventos, otherMonth, hoje) {
+  const dataStr = fmt(dt);
+  const div = document.createElement('div');
+  div.className = 'cal-day' +
+    (otherMonth ? ' other-month' : '') +
+    (dataStr === hoje ? ' today' : '');
+  div.onclick = () => abrirModalEvento(dataStr);
+
+  const numEl = document.createElement('div');
+  numEl.className = 'cal-day-num';
+  numEl.textContent = dt.getDate();
+  div.appendChild(numEl);
+
+  (eventos || []).filter(e => e.data === dataStr).forEach(ev => {
+    const evEl = document.createElement('div');
+    evEl.className = `cal-event ${ev.tipo}`;
+    evEl.textContent = ev.titulo;
+    evEl.onclick = (e) => { e.stopPropagation(); abrirModalEvento(dataStr, ev); };
+    div.appendChild(evEl);
+  });
+
+  cal.appendChild(div);
+}
+
+async function carregarPainelMensal(ano, mes) {
+  const mesStr = `${ano}-${String(mes+1).padStart(2,'0')}`;
+
+  const { data: tarefas } = await sb.from('planner_tarefas')
+    .select('*').eq('user_id', userId)
+    .gte('data', `${mesStr}-01`).lte('data', `${mesStr}-31`)
+    .is('hora_inicio', null).order('created_at').limit(8);
+
+  // Todo mensal (tarefas sem data específica de hora)
+  const todoEl = document.getElementById('mensal-todo-list');
+  todoEl.innerHTML = '';
+  (tarefas || []).forEach(t => {
+    const div = document.createElement('div');
+    div.className = 'tarefa-item';
+    div.innerHTML = `
+      <div class="tarefa-check ${t.concluida ? 'done' : ''}" onclick="toggleTarefa(this, '${t.id}')"></div>
+      <input class="tarefa-texto ${t.concluida ? 'done' : ''}" value="${t.texto || ''}"
+        placeholder="tarefa..." oninput="atualizarTextTarefa('${t.id}', this.value)">`;
+    todoEl.appendChild(div);
+  });
+
+  // Prioridades mensais (reutiliza semana da semana corrente)
+  const prioEl = document.getElementById('mensal-prioridades');
+  prioEl.innerHTML = '';
+  for (let i = 0; i < 3; i++) {
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="prioridade-num">${i+1}</span>
+      <input placeholder="prioridade ${i+1}..." oninput="salvarMensalDebounce()">`;
+    prioEl.appendChild(li);
+  }
+}
+
+function adicionarTarefaMensal() {
+  const ano = mesAtual.getFullYear();
+  const mes = mesAtual.getMonth();
+  const dataStr = `${ano}-${String(mes+1).padStart(2,'0')}-01`;
+  sb.from('planner_tarefas').insert({ user_id: userId, data: dataStr, texto: '' })
+    .select().single().then(({ data }) => {
+      if (data) {
+        const todoEl = document.getElementById('mensal-todo-list');
+        const div = document.createElement('div');
+        div.className = 'tarefa-item';
+        div.innerHTML = `
+          <div class="tarefa-check" onclick="toggleTarefa(this, '${data.id}')"></div>
+          <input class="tarefa-texto" value="" placeholder="tarefa..."
+            oninput="atualizarTextTarefa('${data.id}', this.value)">`;
+        todoEl.appendChild(div);
+        div.querySelector('input').focus();
+      }
+    });
+}
+
+function salvarMensalDebounce() {
+  clearTimeout(salvarMensalTimer);
+  salvarMensalTimer = setTimeout(showSaved, 1000);
+}
+
+// ── MODAL EVENTO ──
+function abrirModalEvento(dataStr, evento = null) {
+  eventoEditandoId = evento?.id || null;
+  document.getElementById('modal-titulo-label').textContent = evento ? 'Editar evento' : 'Novo evento';
+  document.getElementById('evento-titulo').value = evento?.titulo || '';
+  document.getElementById('evento-data').value = dataStr;
+  document.getElementById('evento-tipo').value = evento?.tipo || 'compromisso';
+  document.getElementById('evento-notas').value = evento?.notas || '';
+  document.getElementById('btn-excluir-evento').style.display = evento ? 'flex' : 'none';
+  document.getElementById('modal-evento').classList.add('open');
+}
+
+function fecharModal() {
+  document.getElementById('modal-evento').classList.remove('open');
+  eventoEditandoId = null;
+}
+
+async function salvarEvento() {
+  const payload = {
+    user_id: userId,
+    titulo: document.getElementById('evento-titulo').value,
+    data: document.getElementById('evento-data').value,
+    tipo: document.getElementById('evento-tipo').value,
+    notas: document.getElementById('evento-notas').value,
+  };
+  if (!payload.titulo) return;
+
+  if (eventoEditandoId) {
+    await sb.from('planner_eventos').update(payload).eq('id', eventoEditandoId);
+  } else {
+    await sb.from('planner_eventos').insert(payload);
+  }
+  fecharModal();
+  carregarMes();
+  showSaved();
+}
+
+async function excluirEvento() {
+  if (!eventoEditandoId) return;
+  await sb.from('planner_eventos').delete().eq('id', eventoEditandoId);
+  fecharModal();
+  carregarMes();
+  showSaved();
+}
+
+// Fechar modal ao clicar fora
+document.getElementById('modal-evento').addEventListener('click', function(e) {
+  if (e.target === this) fecharModal();
+});
+
+// Enter no login
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none') {
+    fazerLogin();
+  }
+});
+</script>
+
+<!-- SERVICE WORKER -->
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
